@@ -1,0 +1,485 @@
+1. Explain the role of virtual functions and polymorphism in the Library Management System. Provide a detailed description of how virtual functions enable polymorphism and give an example from the provided code.
+Answer: Role of Virtual Functions and Polymorphism:
+
+Virtual functions are essential for enabling polymorphism in C++. They allow subclasses to implement their own versions of functions declared in the base class. When a virtual function is invoked through a base class pointer, the actual method executed is determined at runtime based on the specific object referenced, not the type of the pointer itself.
+
+In the Library Management System, the LibraryItem class includes a virtual method called displayDetails(). This method is overridden in the Book and Magazine classes to display details pertinent to each type. Consequently, if a LibraryItem* pointer references a Book, calling displayDetails() will execute the version defined in the Book class.
+
+Polymorphism allows the system to manage various item types, such as books and magazines, consistently while enabling each type to operate according to its specifications. For instance, when the catalog displays all items using catalog.displayAll(), it invokes displayDetails() for each item. Despite being stored as LibraryItem, the corresponding version of the function—whether from Book or Magazine—is automatically executed. 
+
+This design enhances flexibility and simplifies adding new item types without changing the catalog functionality. Overall, polymorphism contributes to a clean and maintainable codebase by facilitating the introduction of additional item types with minimal impact on existing code.
+
+2. Additionally, discuss the importance of having a virtual destructor in the base class. What would happen if the destructor was not declared as virtual?
+Answer: Importance of Virtual Destructor:
+
+A virtual destructor in a base class is crucial because it ensures that when a derived class object is deleted via a base class pointer, the derived class's destructor is called. Without a virtual destructor, only the base class's destructor would execute, which can lead to resource leaks.
+
+If the LibraryItem class lacks a virtual destructor, deleting an instance of Book through a LibraryItem* pointer results in undefined behavior, as only the LibraryItem destructor will run, leaving resources allocated in the Book class unreleased.
+
+The presence of a virtual destructor guarantees that when a derived class object (such as Book or Magazine) is deleted through a base class pointer, the appropriate destructor for the derived class is invoked. This prevents improper cleanup of derived class resources.
+
+For example, if a LibraryItem* points to a Book and is deleted without a virtual destructor, the cleanup for the Book parts won't occur. This can lead to memory leaks, as only the base class's destructor performs cleanup, neglecting necessary cleanup for the derived class. Implementing a virtual destructor ensures that both the base and derived class destructors are executed, fully deallocating memory and preventing memory-related issues.
+
+
+
+
+
+
+.cpp file
+#include "LibraryManagement.h"
+#include <iostream>
+
+// Function to display the main menu
+void displayMainMenu() {
+    std::cout << "\nWelcome to the Virtual Library\n";
+    std::cout << "Library Management System Menu:\n";
+    std::cout << "1. Books\n";
+    std::cout << "2. Magazines\n";
+    std::cout << "0. Exit\n";
+    std::cout << "Choose an option: ";
+}
+
+// Function to manage book operations
+void handleBooks(Catalog<Book>& bookCatalog) {
+    bool running = true;
+
+    while (running) {
+        std::cout << "\nBook Menu:\n";
+        std::cout << "1. View All Books\n";
+        std::cout << "2. Borrow Book\n";
+        std::cout << "3. View Borrowed Items\n";
+        std::cout << "4. Store Book\n";
+        std::cout << "5. Return Book\n";
+        std::cout << "0. Back to Main Menu\n";
+        std::cout << "Choose an option: ";
+
+        int option;
+        std::cin >> option;
+        std::cin.ignore(); // Clear the newline character from the input buffer
+
+        if (option == 1) {
+            bookCatalog.displayAll();
+        }
+        else if (option == 2) {
+            std::string title, author, isbn;
+            std::cout << "Enter Book Title: ";
+            std::getline(std::cin, title);
+            std::cout << "Enter Author Name: ";
+            std::getline(std::cin, author);
+            std::cout << "Enter ISBN: ";
+            std::getline(std::cin, isbn);
+            bookCatalog.borrowItem(isbn, "Borrower_Name"); // Placeholder for borrower name
+        }
+        else if (option == 3) {
+            bookCatalog.displayBorrowedItems();
+        }
+        else if (option == 4) {
+            std::string title, author, isbn, genre;
+            int year;
+            std::cout << "Enter Book Title: ";
+            std::getline(std::cin, title);
+            std::cout << "Enter Author Name: ";
+            std::getline(std::cin, author);
+            std::cout << "Enter Year: ";
+            std::cin >> year;
+            std::cin.ignore(); // Clear the buffer
+            std::cout << "Enter ISBN: ";
+            std::getline(std::cin, isbn);
+            std::cout << "Enter Genre: ";
+            std::getline(std::cin, genre);
+            bookCatalog.addItem(Book(title, author, isbn, genre, year));
+            std::cout << "Congratulations! The book has been stored successfully.\n";
+        }
+        else if (option == 5) {
+            // Return Book
+            std::string isbn;
+            std::cout << "Enter ISBN of the book to return: ";
+            std::getline(std::cin, isbn);
+            bookCatalog.returnItem(isbn);
+        }
+        else if (option == 0) {
+            running = false; // Back to Main Menu
+        }
+        else {
+            std::cout << "Invalid choice. Please try again.\n";
+        }
+    }
+}
+
+// Function to manage magazine operations
+void handleMagazines(Catalog<Magazine>& magazineCatalog) {
+    bool running = true;
+
+    while (running) {
+        std::cout << "\nMagazine Menu:\n";
+        std::cout << "1. View All Magazines\n";
+        std::cout << "2. Borrow Magazine\n";
+        std::cout << "3. View Borrowed Items\n";
+        std::cout << "4. Store Magazine\n";
+        std::cout << "5. Return Magazine\n";
+        std::cout << "0. Back to Main Menu\n";
+        std::cout << "Choose an option: ";
+
+        int option;
+        std::cin >> option;
+        std::cin.ignore(); // Clear the newline character from the input buffer
+
+        if (option == 1) {
+            magazineCatalog.displayAll();
+        }
+        else if (option == 2) {
+            std::string title, author, isbn;
+            std::cout << "Enter Magazine Title: ";
+            std::getline(std::cin, title);
+            std::cout << "Enter Author Name: ";
+            std::getline(std::cin, author);
+            std::cout << "Enter ISBN: ";
+            std::getline(std::cin, isbn);
+            magazineCatalog.borrowItem(isbn, "Borrower_Name"); // Placeholder for borrower's name
+        }
+        else if (option == 3) {
+            magazineCatalog.displayBorrowedItems();
+        }
+        else if (option == 4) {
+            std::string title, author, isbn;
+            int issueNumber;
+            std::cout << "Enter Magazine Title: ";
+            std::getline(std::cin, title);
+            std::cout << "Enter Author Name: ";
+            std::getline(std::cin, author);
+            std::cout << "Enter ISBN: ";
+            std::getline(std::cin, isbn);
+            std::cout << "Enter Issue Number: ";
+            std::cin >> issueNumber;
+            std::cin.ignore();  // Clear the buffer
+            magazineCatalog.addItem(Magazine(title, author, isbn, issueNumber));
+            std::cout << "Congratulations! The magazine has been stored successfully.\n";
+        }
+        else if (option == 5) {
+            std::string isbn;
+            std::cout << "Enter ISBN of the magazine to return: ";
+            std::getline(std::cin, isbn);
+            magazineCatalog.returnItem(isbn);
+        }
+        else if (option == 0) {
+            running = false; // Back to Main Menu
+        }
+        else {
+            std::cout << "Invalid choice. Please try again.\n";
+        }
+    }
+}
+
+int main() {
+    Catalog<Book> bookCatalog;
+    Catalog<Magazine> magazineCatalog;
+
+    // Sample books
+    Book b1("The Great Gatsby", "F. Scott Fitzgerald", "123456789", "Fiction", 1925);
+    Book b2("1984", "George Orwell", "987654321", "Dystopian", 1949);
+    Book b3("Brave New World", "Aldous Huxley", "111222333", "Sci-Fi", 1910);
+
+    bookCatalog.addItem(b1);
+    bookCatalog.addItem(b2);
+    bookCatalog.addItem(b3);
+
+    // Sample magazines
+    Magazine m1("Tech Weekly", "Jane Doe", "333444555", 42);
+    Magazine m2("Nature World", "John Smith", "444555666", 15);
+
+    magazineCatalog.addItem(m1);
+    magazineCatalog.addItem(m2);
+
+    bool running = true;
+
+    while (running) {
+        displayMainMenu();
+        int menuOption;
+        std::cin >> menuOption;
+        std::cin.ignore(); // Clear the newline character from the input buffer
+
+        if (menuOption == 1) {
+            handleBooks(bookCatalog);
+        }
+        else if (menuOption == 2) {
+            handleMagazines(magazineCatalog);
+        }
+        else if (menuOption == 0) {
+
+                running = false; // Exit the program
+        }
+        else {
+            std::cout << "Invalid option. Please select a valid choice.\n";
+        }
+    }
+
+    std::cout << "Thank you for using the Library Management System. Goodbye!" << std::endl;
+    return 0;
+}
+
+
+
+
+
+
+
+
+.h file
+/*
+Name: Dil Humyra Sultana Borna
+Student ID: 139166227
+Date: 16/10/2024
+*/
+#ifndef LIBRARYMANAGEMENT_H
+#define LIBRARYMANAGEMENT_H
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <string>
+#include <stdexcept>
+
+// Base class LibraryItem
+class LibraryItem {
+protected:
+    std::string title;
+    std::string author;
+    std::string ISBN;
+
+public:
+    LibraryItem(const std::string& title, const std::string& author, const std::string& ISBN)
+        : title(title), author(author), ISBN(ISBN) {}
+
+    virtual ~LibraryItem() = default;
+
+    // Pure virtual function for displaying item details
+    virtual void displayDetails() const = 0;
+
+    // Getters for attributes
+    std::string getTitle() const { return title; }
+    std::string getAuthor() const { return author; }
+    std::string getISBN() const { return ISBN; }
+};
+
+// Derived class Book
+class Book : public LibraryItem {
+private:
+    std::string genre;
+    int year;
+    bool isBorrowed = false; // Track if the book is borrowed
+
+public:
+    Book(const std::string& title, const std::string& author, const std::string& ISBN,
+        const std::string& genre, int year)
+        : LibraryItem(title, author, ISBN), genre(genre), year(year) {}
+
+    void displayDetails() const override {
+        std::cout << "Book: " << title << " by " << author << ", ISBN: " << ISBN
+            << ", Genre: " << genre << ", Year: " << year
+            << (isBorrowed ? " (Borrowed)" : " (Available)") << std::endl;
+    }
+
+    int getYear() const { return year; }
+    std::string getGenre() const { return genre; }
+    bool getIsBorrowed() const { return isBorrowed; }
+    void setIsBorrowed(bool status) { isBorrowed = status; }
+};
+
+// Derived class Magazine
+class Magazine : public LibraryItem {
+private:
+    int issueNumber;
+
+public:
+    Magazine(const std::string& title, const std::string& author, const std::string& ISBN, int issueNumber)
+        : LibraryItem(title, author, ISBN), issueNumber(issueNumber) {}
+
+    void displayDetails() const override {
+        std::cout << "Magazine: " << title << " by " << author
+            << ", ISBN: " << ISBN << ", Issue: " << issueNumber << std::endl;
+    }
+};
+
+// Template class Catalog
+template <typename T>
+class Catalog {
+private:
+    std::vector<T> items;
+    std::map<std::string, std::string> borrowedItems; // Key: ISBN, Value: Borrower's Name
+
+public:
+    void addItem(const T& item) {
+        items.push_back(item);
+    }
+
+    void removeItem(const T& item) {
+        items.erase(std::remove(items.begin(), items.end(), item), items.end());
+    }
+
+    template <typename Func>
+    T searchItem(Func func) {
+        auto it = std::find_if(items.begin(), items.end(), func);
+        if (it != items.end()) {
+            return *it;
+        }
+        throw std::runtime_error("Item not found");
+    }
+
+    void displayAll() const {
+        for (const auto& item : items) {
+            item.displayDetails();
+        }
+    }
+
+    void borrowItem(const std::string& isbn, const std::string& borrower) {
+        auto it = std::find_if(items.begin(), items.end(),
+            [&isbn](const T& item) { return item.getISBN() == isbn; });
+
+        if (it != items.end()) {
+            if constexpr (std::is_same<T, Book>::value) {
+                if (!it->getIsBorrowed()) {
+                    borrowedItems[isbn] = borrower;
+                    it->setIsBorrowed(true);
+                    std::cout << "Congratulations, you have borrowed the book!" << std::endl;
+                }
+                else {
+                    std::cout << "Sorry, this book is already borrowed." << std::endl;
+                }
+            }
+            else {
+                // For magazines, we can implement similar borrowing logic if required
+                borrowedItems[isbn] = borrower; // Placeholder logic, customize as needed
+                std::cout << "You've borrowed the magazine!" << std::endl;
+            }
+        }
+        else {
+            std::cout << "Item not found. Please check the title, author, year, or ISBN." << std::endl;
+        }
+    }
+
+    void returnItem(const std::string& isbn) {
+        auto it = std::find_if(items.begin(), items.end(), [&isbn](const T& item) {
+            return item.getISBN() == isbn;
+        });
+
+        if (it != items.end()) {
+            auto borrowedIt = borrowedItems.find(isbn);
+            if (borrowedIt != borrowedItems.end()) {
+                borrowedItems.erase(borrowedIt);
+                if constexpr (std::is_same<T, Book>::value) {
+                    it->setIsBorrowed(false);
+                }
+                std::cout << "You have returned the item successfully!" << std::endl;
+            }
+            else {
+                std::cout << "This item was not borrowed." << std::endl;
+            }
+        }
+        else {
+            std::cout << "Item not found." << std::endl;
+        }
+    }
+
+    void displayBorrowedItems() const {
+        if (borrowedItems.empty()) {
+            std::cout << "No items are currently borrowed." << std::endl;
+            return;
+        }
+
+        std::cout << "Currently Borrowed Items:\n";
+        for (const auto& entry : borrowedItems) {
+            std::cout << "ISBN: " << entry.first << ", Borrower: " << entry.second << std::endl;
+        }
+    }
+
+    typename std::vector<T>::iterator begin() { return items.begin(); }
+    typename std::vector<T>::iterator end() { return items.end(); }
+};
+
+// Functor for sorting by title
+struct SortByTitle {
+    bool operator()(const Book& a, const Book& b) {
+        return a.getTitle() < b.getTitle();
+    }
+};
+
+// Functor for sorting by author
+struct SortByAuthor {
+    bool operator()(const Book& a, const Book& b) {
+        return a.getAuthor() < b.getAuthor();
+    }
+};
+
+// Functor for sorting by year (for Book objects)
+struct SortByYear {
+    bool operator()(const Book& a, const Book& b) {
+        return a.getYear() < b.getYear();
+    }
+};
+
+#endif // LIBRARYMANAGEMENT_H
+
+
+
+
+
+
+
+
+
+
+Welcome to the Virtual Library
+
+Library Management System Menu:
+1. Books
+   if books
+   i. View All Books
+   	a. View books by title
+   	b. View books by author
+   	c. View books by ISBN
+   	d. Sort Books by Year
+   ii. Borrow Book
+        There will be a prompt to enter 
+           1. the book title
+           2. Author name
+           3. Year
+           4. ISBN
+         If enter any information wrong, there will be a prompt that there is no book by this title or author name or year or ISBN. Please enter a valid title, name, year or ISBN. it will take the borrow book option again and will continue to as the question as long as the information are not correct. Once the information is correct. Will prompt, congratulation, We have this book available in our library and you can borrow it. But if this book is already borrowed then it will prompt that sorry we do not have this book. Please pick another one or show the main menue option.
+   iii. View Borrowed Items
+    this will show the books information and the persons information who has borrowed the book.
+   iv. Store book
+there will be a prompt to enter the information about the book
+           1. the book title
+           2. Author name
+           3. Year
+           4. ISBN
+After entering all these information there will be prompt that congratulations you have entered all the information correctly. and there will be options if wants to store more book or main menue
+    v. Return Book
+there will be a prompt to enter the information about the book
+           1. the book title
+           2. Author name
+           3. Year
+           4. ISBN
+After entering all these information there will be prompt that congratulations you have entered all the information correctly. and there will be options if wants to return more book or main menue
+
+2. Magazines
+  if magazines, it will show the same options as books.
+
+3. Exit
+
+
+
+
+
+
+    std::cout << "4. View All Magazines\n";
+    std::cout << "5. \n";
+    std::cout << "6. Return Book\n";
+    std::cout << "7. \n";
+    std::cout << "8. \n";
+    std::cout << "9. \n";
+    std::cout << "0. Exit
+
+
+
