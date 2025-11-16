@@ -1,0 +1,491 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+struct ScheduleItem {
+    string description;
+    int dueDate;
+    int importance;
+    ScheduleItem* left;
+    ScheduleItem* right;
+
+    ScheduleItem() : description(""), dueDate(0), importance(0), left(nullptr), right(nullptr) {}
+
+    ScheduleItem(const string& desc, int date, int priority) {
+        description = desc;
+        importance = (priority >= 1 && priority <= 5) ? priority : 3;
+        if (date >= 1012024 && date <= 31122029) { 
+            dueDate = date;
+        }
+        else {
+            dueDate = 1012024; 
+        }
+        left = right = nullptr;
+    }
+};
+
+class TaskManager {
+    ScheduleItem* root;
+
+    void addNode(ScheduleItem*& node, const string& desc, int date, int priority) {
+        ScheduleItem* newNode = new ScheduleItem(desc, date, priority);
+        if (!node) {
+            node = newNode;
+            return;
+        }
+        ScheduleItem* current = node;
+        ScheduleItem* previous = nullptr;
+
+        while (current) {
+            previous = current;
+            if (date < current->dueDate) {
+                current = current->left;
+            }
+            else {
+                current = current->right;
+            }
+        }
+
+        if (date < previous->dueDate) {
+            previous->left = newNode;
+        }
+        else {
+            previous->right = newNode;
+        }
+    }
+
+    void showInOrder(ScheduleItem* node) const {
+        if (node) {
+            showInOrder(node->left);
+            cout << "Task: " << node->description << ", Due: " << node->dueDate << ", Importance: " << node->importance << endl;
+            showInOrder(node->right);
+        }
+    }
+
+    ScheduleItem* locateTask(ScheduleItem* node, int date) const {
+        while (node && node->dueDate != date) {
+            node = (date < node->dueDate) ? node->left : node->right;
+        }
+        return node;
+    }
+
+    int countPending(ScheduleItem* node, int date) const {
+        if (!node) return 0;
+        if (node->dueDate > date) {
+            return 1 + countPending(node->left, date) + countPending(node->right, date);
+        }
+        return countPending(node->right, date);
+    }
+
+public:
+    TaskManager() : root(nullptr) {}
+
+    void addTask(const string& desc, int date, int priority) {
+        addNode(root, desc, date, priority);
+    }
+
+    void displayTasks() const {
+        showInOrder(root);
+    }
+
+    void searchTask(int date) const {
+        ScheduleItem* found = locateTask(root, date);
+        if (found) {
+            cout << "Found: " << found->description << ", Due: " << found->dueDate << ", Priority: " << found->importance << endl;
+        }
+        else {
+            cout << "No task found for the date: " << date << endl;
+        }
+    }
+
+    void countAfter(int date) const {
+        int count = countPending(root, date);
+        cout << "Tasks pending after " << date << ": " << count << endl;
+    }
+};
+
+int main() {
+    TaskManager manager;
+    int option, date, priority;
+    string desc;
+
+    cout << "Welcome to Enhanced Task Scheduler\n";
+    do {
+        cout << "\nOptions:\n1. Add Task\n2. Show All Tasks\n3. Find Task by Date\n4. Count Pending Tasks\n5. Exit\nChoose: ";
+        cin >> option;
+        switch (option) {
+        case 1:
+            cout << "Task description: ";
+            cin.ignore();
+            getline(cin, desc);
+            cout << "Due date (DDMMYYYY): ";
+            cin >> date;
+            cout << "Priority (1-5): ";
+            cin >> priority;
+            manager.addTask(desc, date, priority);
+            break;
+        case 2:
+            cout << "Displaying all tasks in order:\n";
+            manager.displayTasks();
+            break;
+        case 3:
+            cout << "Enter due date (DDMMYYYY): ";
+            cin >> date;
+            manager.searchTask(date);
+            break;
+        case 4:
+            cout << "Enter a date to count tasks after (DDMMYYYY): ";
+            cin >> date;
+            manager.countAfter(date);
+            break;
+        case 5:
+            cout << "Exiting the Task Scheduler. Have a great day!\n";
+            break;
+        default:
+            cout << "Invalid choice. Try again.\n";
+        }
+    } while (option != 5);
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+Task Manager.h
+#ifndef TASKMANAGER_H
+#define TASKMANAGER_H
+
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+struct TaskItem {
+    string taskDescription;
+    int taskDueDate; // Stored as DDMMYYYY
+    int taskImportance;
+    TaskItem* leftChild;
+    TaskItem* rightChild;
+
+    TaskItem() : taskDescription(""), taskDueDate(0), taskImportance(0), leftChild(nullptr), rightChild(nullptr) {}
+
+    TaskItem(const string& description, int dueDate, int importance) {
+        taskDescription = description;
+        taskImportance = (importance >= 1 && importance <= 5) ? importance : 3;
+        if (dueDate >= 1012024 && dueDate <= 31122029) {
+            taskDueDate = dueDate;
+        }
+        else {
+            taskDueDate = 1012024;
+        }
+        leftChild = rightChild = nullptr;
+    }
+};
+
+class TaskManager {
+    TaskItem* rootNode;
+
+    void addTaskNode(TaskItem*& node, const string& description, int dueDate, int importance);
+    void showTasksInOrder(TaskItem* node) const;
+    TaskItem* locateTask(TaskItem* node, int dueDate) const;
+    int countPendingTasks(TaskItem* node, int currentDate) const;
+
+public:
+    TaskManager();
+    void addTask(const string& description, int dueDate, int importance);
+    void displayAllTasks() const;
+    void searchForTask(int dueDate) const;
+    void countTasksAfter(int currentDate) const;
+};
+
+#endif // TASKMANAGER_H
+
+
+
+
+
+
+taskmanger.cpp
+#include "TaskManager.h"
+#include <iomanip> // Ensure this header is included
+
+TaskManager::TaskManager() : rootNode(nullptr) {}
+
+void TaskManager::addTaskNode(TaskItem*& node, const string& description, int dueDate, int importance) {
+    TaskItem* newNode = new TaskItem(description, dueDate, importance);
+    if (!node) {
+        node = newNode;
+        return;
+    }
+    TaskItem* current = node;
+    TaskItem* previous = nullptr;
+
+    while (current) {
+        previous = current;
+        if (dueDate < current->taskDueDate) {
+            current = current->leftChild;
+        }
+        else {
+            current = current->rightChild;
+        }
+    }
+
+    if (dueDate < previous->taskDueDate) {
+        previous->leftChild = newNode;
+    }
+    else {
+        previous->rightChild = newNode;
+    }
+}
+
+void TaskManager::showTasksInOrder(TaskItem* node) const {
+    if (node) {
+        showTasksInOrder(node->leftChild);
+        // Extract day, month, year for formatting the output
+        int year = node->taskDueDate % 10000;
+        int month = (node->taskDueDate / 10000) % 100;
+        int day = node->taskDueDate / 1000000;
+
+        cout << "Task: " << node->taskDescription
+            << ", Due: " << std::setfill('0') << std::setw(2) << day << "/"
+            << std::setfill('0') << std::setw(2) << month << "/"
+            << year << ", Importance: " << node->taskImportance
+            << endl;
+
+        showTasksInOrder(node->rightChild);
+    }
+}
+
+TaskItem* TaskManager::locateTask(TaskItem* node, int dueDate) const {
+    while (node && node->taskDueDate != dueDate) {
+        node = (dueDate < node->taskDueDate) ? node->leftChild : node->rightChild;
+    }
+    return node;
+}
+
+int TaskManager::countPendingTasks(TaskItem* node, int currentDate) const {
+    if (!node) return 0;
+    if (node->taskDueDate > currentDate) {
+        return 1 + countPendingTasks(node->leftChild, currentDate) + countPendingTasks(node->rightChild, currentDate);
+    }
+    return countPendingTasks(node->rightChild, currentDate);
+}
+
+void TaskManager::addTask(const string& description, int dueDate, int importance) {
+    addTaskNode(rootNode, description, dueDate, importance);
+}
+
+void TaskManager::displayAllTasks() const {
+    showTasksInOrder(rootNode);
+}
+
+void TaskManager::searchForTask(int dueDate) const {
+    TaskItem* foundTask = locateTask(rootNode, dueDate);
+    if (foundTask) {
+        // Extract day, month, year for formatting
+        int year = foundTask->taskDueDate % 10000;
+        int month = (foundTask->taskDueDate / 10000) % 100;
+        int day = foundTask->taskDueDate / 1000000;
+
+        cout << "Found: " << foundTask->taskDescription
+            << ", Due: " << std::setfill('0') << std::setw(2) << day << "/"
+            << std::setfill('0') << std::setw(2) << month << "/"
+            << year << ", Importance: " << foundTask->taskImportance << endl;
+    }
+    else {
+        cout << "No task found for the due date.\n";
+    }
+}
+
+void TaskManager::countTasksAfter(int currentDate) const {
+    int count = countPendingTasks(rootNode, currentDate);
+    cout << "Tasks pending after " << currentDate << ": " << count << endl;
+}
+
+
+
+
+
+
+
+
+
+
+main.cpp#include <iostream>
+#include <sstream> // For string stream manipulation
+#include <iomanip> // For output formatting
+#include "TaskManager.h"
+
+using namespace std;
+
+// Function to validate the date format and range
+bool isValidDate(int day, int month, int year) {
+    // Check for valid date ranges
+    if (month < 1 || month > 12 || day < 1 || year < 2024) return false;
+
+    // Simple check for the number of days in each month
+    int daysInMonth = 31;
+    if (month == 2) {
+        daysInMonth = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) ? 29 : 28;
+    }
+    else if (month == 4 || month == 6 || month == 9 || month == 11) {
+        daysInMonth = 30;
+    }
+
+    return day <= daysInMonth;
+}
+
+// Function to obtain a valid date from the user
+int getValidDate() {
+    string dateInput;
+    int day, month, year;
+
+    while (true) {
+        cout << "Due date (dd/mm/yyyy): ";
+        cin >> dateInput;
+
+        // Parse the date input
+        char slash1, slash2; // To capture the '/' characters
+        istringstream dateStream(dateInput);
+        dateStream >> day >> slash1 >> month >> slash2 >> year;
+
+        if (dateStream && slash1 == '/' && slash2 == '/' && isValidDate(day, month, year)) {
+            break; // Exit loop when the date is valid
+        }
+        else {
+            cout << "Invalid date format or range. Please enter in dd/mm/yyyy format." << endl;
+        }
+    }
+
+    // Return date in DDMMYYYY format for the tree
+    return (day * 1000000) + (month * 10000) + year; // Creates an integer in the format DDMMYYYY
+}
+
+// Function to obtain a valid priority from user
+int getValidPriority() {
+    int priority;
+    while (true) {
+        cout << "Importance (1-5): ";
+        cin >> priority;
+        if (priority >= 1 && priority <= 5) {
+            break;
+        }
+        else {
+            cout << "Priority must be between 1 and 5. Please try again." << endl;
+        }
+    }
+    return priority;
+}
+
+int main() {
+    TaskManager manager;
+    int option;
+    int dueDate;          // Declare dueDate here
+    int priority;         // Declare priority here
+    string description;
+
+    cout << "Welcome to Enhanced Task Scheduler\n";
+    do {
+        cout << "\nOptions:\n"
+            << "1. Add Task\n"
+            << "2. Show All Tasks\n"
+            << "3. Find Task by Due Date\n"
+            << "4. Count Pending Tasks\n"
+            << "5. Exit\n"
+            << "\nSelect Option: ";
+        cin >> option;
+
+        switch (option) {
+        case 1:
+            cin.ignore(); // Clear the newline from the input buffer before getline
+            cout << "Task description: ";
+            getline(cin, description);
+            dueDate = getValidDate();        // Get valid date here
+            priority = getValidPriority();    // Get valid priority here
+            manager.addTask(description, dueDate, priority);
+            break;
+        case 2:
+            cout << "Displaying all tasks in order:\n";
+            manager.displayAllTasks();
+            break;
+        case 3: {
+            cin.ignore(); // Clear input buffer before getline
+            string dateInput;
+            cout << "Enter due date (dd/mm/yyyy): ";
+            cin >> dateInput;
+
+            // Parse the input date
+            int day, month, year;
+            char slash1, slash2;
+            istringstream inputStream(dateInput);
+            inputStream >> day >> slash1 >> month >> slash2 >> year;
+
+            if (inputStream && slash1 == '/' && slash2 == '/' && isValidDate(day, month, year)) {
+                // Convert to DDMMYYYY format
+                dueDate = (day * 1000000) + (month * 10000) + year;
+                manager.searchForTask(dueDate);
+            }
+            else {
+                cout << "Invalid date format. Please use dd/mm/yyyy." << endl;
+            }
+            break;
+        }
+        case 4: {
+            cin.ignore(); // Clear input buffer before getline
+            string dateInput;
+            cout << "Enter a date to count tasks after (dd/mm/yyyy): ";
+            cin >> dateInput;
+
+            // Parse the input
+            int day, month, year;
+            char slash1, slash2;
+            istringstream inputStream(dateInput);
+            inputStream >> day >> slash1 >> month >> slash2 >> year;
+
+            if (inputStream && slash1 == '/' && slash2 == '/' && isValidDate(day, month, year)) {
+                // Convert to DDMMYYYY format
+                dueDate = (day * 1000000) + (month * 10000) + year;
+                manager.countTasksAfter(dueDate);
+            }
+            else {
+                cout << "Invalid date format. Please use dd/mm/yyyy." << endl;
+            }
+            break;
+        }
+        case 5:
+            cout << "Exiting the Task Scheduler. Have a great day!\n";
+            break;
+        default:
+            cout << "Invalid choice. Try again.\n";
+        }
+    } while (option != 5);
+
+    return 0;
+}
+
+
+
+5. Rehashing in Hash Tables
+When Rehashing Becomes Necessary:
+In the BookingHashTable class, rehashing becomes necessary when the load factor (the ratio of the number of entries to the table size) exceeds a certain threshold, commonly set around 0.7. This threshold indicates that the hash table is getting close to full capacity, which can lead to increased collisions and decreased performance for insertion and search operations. 
+
+For example, if the current size of the hash table is 15 and the number of entries reaches 11 (making the load factor approximately 11/15 ≈ 0.73), it is time to trigger a rehash. When this condition is met, we would:
+
+Resize the Hash Table: Typically, the new size is chosen to be double the current size, although it can also be another prime number to help with better distribution and reducing collisions.
+Create a New Hash Table: Allocate memory for the new hash table with the increased size.
+Data Consistency During Rehashing:
+To ensure data consistency during rehashing, the following steps should be taken:
+
+Store Existing Entries: While resizing, all existing entries need to be temporarily stored to facilitate their re-insertion into the new hash table.
+Rehash and Insert: Once the new table is created, loop through each entry from the old table and use the hash function to insert them into the new hash table. This insertion should follow the same collision resolution strategy (e.g., linear probing) as the original table to maintain the correct order and positioning.
+Update the Reference: Finally, replace the old hash table reference with the new hash table reference in the BookingHashTable class.
+Delete Old Table: Free the memory allocated for the old hash table to prevent memory leaks.
