@@ -1,0 +1,439 @@
+Answer to the question number 1:
+
+C++ Object Lifetime Management:
+C++ offers three primary ways to manage the lifetime of objects. Each approach has its own characteristics and implications for memory allocation and deallocation. Lifetime objects are -
+ 1. static, 
+ ii. automatic, and 
+ iii. dynamic. 
+
+1. Static Object Lifetime:
+Storage: Objects with static storage duration are allocated in the data segment of the program's memory.
+Lifetime: They exist for the entire duration of the program, from its start to its end.
+Key Points:
+ a. Initialized before main() function starts.
+ b. Destructed after main() function ends.
+ c. Useful for global variables and objects that need to persist throughout the program's execution.
+Example:
+class MyClass {
+public:
+    MyClass() {
+        // Constructor
+    }
+    ~MyClass() {
+        // Destructor
+    }
+};
+
+MyClass global_object; // Static object
+
+2. Automatic Object Lifetime:
+Storage: Objects with automatic storage duration are allocated on the stack.
+Lifetime: They exist within the scope in which they are declared. When the scope ends, the object is automatically destroyed.
+Key Points:
+ a. Created when the function is entered.
+ b. Destroyed when the function exits.
+ c. Efficient for objects that are only needed within a specific scope.
+Example:
+void myFunction() {
+    MyClass local_object; // Automatic object
+}
+
+3. Dynamic Object Lifetime:
+Storage: Objects with dynamic storage duration are allocated on the heap using the new operator.
+Lifetime: They exist until they are explicitly deallocated using the delete operator.
+Key Points:
+ a. More flexible than static and automatic objects.
+ b. Requires manual memory management, which can lead to memory leaks if not handled carefully.
+ c. Use with caution and ensure proper deallocation.
+Example:
+MyClass* dynamic_object = new MyClass();
+// ...
+delete dynamic_object;
+
+Stack Unwinding:
+Stack unwinding is the process of automatically calling destructors for objects that are going out of scope. This occurs when a function returns or an exception is thrown. Here is an example:
+void myFunction() {
+    MyClass obj1;
+    try {
+        MyClass obj2;
+        throw std::runtime_error("Error");
+    } catch (...) {
+        // Exception handling
+    }
+}
+If an exception is thrown within the try block, the destructor of obj2 will be called before the control flow jumps to the catch block. This is known as stack unwinding.
+
+Key Points:
+ a. Ensures proper resource cleanup, even in exceptional conditions.
+ b. Can be used to implement some techniques, which help prevent resource leaks.
+
+By understanding these concepts and using them appropriately, we can effectively manage object lifetimes in the C++ programs, leading to more robust and efficient code.
+
+
+
+
+
+
+
+
+Answer to the question number 2:
+
+Answer to the question number 2:
+
+
+
+In C++, both copy constructors and assignment operators are used to create copies of objects. However, they have distinct purposes and behaviors:
+
+Difference between a Copy Constructor and Assignment Operator:
+
+
+
+ 1. Copy Constructor:
+
+	i. Initializes a new object with the values of an existing object.
+
+	ii. Called implicitly in various scenarios, such as:
+
+	iii. Passing objects by value to functions.
+
+	iv. Returning objects from functions.
+
+	v. Initializing objects with other objects of the same type.
+
+	
+
+ 2. Assignment Operator:
+
+	i. Assigns the values of one object to another existing object of the same type.
+
+	ii. Called explicitly using the = operator.
+
+	
+
+Copy constructor handling Deep Copies and Shallow Copies:
+
+By default, a copy constructor performs a shallow copy, which means it copies the values of the member variables without creating new copies of dynamically allocated memory. This can lead to issues if the original and copied objects share the same dynamically allocated memory.
+
+To perform a deep copy, we need to explicitly allocate new memory for the dynamically allocated members of the copied object and copy the contents.
+
+
+
+Assignment Operator handling Deep Copies and Shallow Copies:
+
+Similar to the copy constructor, the default assignment operator performs a shallow copy.
+
+To perform a deep copy, we need to explicitly deallocate any existing dynamically allocated memory in the target object, allocate new memory, and copy the contents from the source object.
+
+
+
+Here is an Example:
+
+
+
+class MyClass {
+
+public:
+
+  MyClass() {
+
+    ptr = new int(10);
+
+  }
+
+
+
+  // Copy constructor
+
+  MyClass(const MyClass& other) {
+
+    // Shallow copy (default behavior)
+
+    ptr = other.ptr;
+
+
+
+    // Deep copy
+
+    // ptr = new int(*other.ptr);
+
+  }
+
+
+
+  // Assignment operator
+
+  MyClass& operator=(const MyClass& other) {
+
+    // Self-assignment check
+
+    if (this == &other) {
+
+      return *this;
+
+    }
+
+
+
+    // Shallow copy (default behavior)
+
+    delete ptr;
+
+    ptr = other.ptr;
+
+
+
+    // Deep copy
+
+    // delete ptr;
+
+    // ptr = new int(*other.ptr);
+
+
+
+    return *this;
+
+  }
+
+
+
+private:
+
+  int* ptr;
+
+};
+
+
+
+In this example, the default copy constructor and assignment operator perform shallow copies, which can lead to issues if multiple objects share the same dynamically allocated memory. To implement deep copies, we need to allocate new memory for the ptr member in the copy constructor and assignment operator and copy the value from the source object. The self-assignment check in the assignment operator is essential to prevent accidental memory leaks and other issues.
+
+
+
+In conclusion by understanding the differences between copy constructors and assignment operators and implementing deep copies when necessary, we can avoid potential memory leaks and other issues in C++ programs.
+
+
+
+
+Question 3: 
+You are building a system to track user acitvity on a social media platform.
+Each post made by a user should have a unique post ID, content, user ID, timestamp
+, number of likes, and comments. Additionally, the system should track trending hashtags. 
+the program should provide the following functionalities-
+1. Add a new post to the system
+2. Allow users to like and comment on posts
+3. Display a list of all posts by a specific user.
+4. Highlight trending hatshtags based on their frequency in posts.
+5. Sort posts by timestamp, number of likes or number of Comments.
+
+
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include <algorithm>
+
+using namespace std;
+
+class Post {
+public:
+    int postId;
+    string content;
+    int userId;
+    string timestamp;
+    int likes;
+    vector<string> comments;
+    vector<string> hashtags;
+
+    // Constructor
+    Post(int id, const string& content, int userId, const string& timestamp)
+        : postId(id), content(content), userId(userId), timestamp(timestamp), likes(0) {}
+};
+
+class User {
+public:
+    int userId;
+    vector<Post> posts;
+
+    // Constructor
+    User(int id) : userId(id) {}
+};
+
+class SocialMediaSystem {
+public:
+    vector<Post> posts;
+    map<string, int> hashtagFrequency;
+
+    void addPost(const Post& post) {
+        posts.push_back(post);
+        for (const string& hashtag : post.hashtags) {
+            hashtagFrequency[hashtag]++;
+        }
+    }
+
+    void likePost(int postId) {
+        for (Post& post : posts) {
+            if (post.postId == postId) {
+                post.likes++;
+                break;
+            }
+        }
+    }
+
+    void commentPost(int postId, const string& comment) {
+        for (Post& post : posts) {
+            if (post.postId == postId) {
+                post.comments.push_back(comment);
+                break;
+            }
+        }
+    }
+
+    vector<Post> getPostsByUser(int userId) {
+        vector<Post> userPosts;
+        for (const Post& post : posts) {
+            if (post.userId == userId) {
+                userPosts.push_back(post);
+            }
+        }
+        return userPosts;
+    }
+
+    vector<pair<string, int>> getTrendingHashtags() {
+        vector<pair<string, int>> sortedHashtags(hashtagFrequency.begin(), hashtagFrequency.end());
+        sort(sortedHashtags.begin(), sortedHashtags.end(), [](const pair<string, int>& a, const pair<string, int>& b) {
+            return a.second > b.second;
+        });
+        return sortedHashtags;
+    }
+
+    void sortPosts(vector<Post>& postsToSort, const string& sortBy) {
+        if (sortBy == "timestamp") {
+            sort(postsToSort.begin(), postsToSort.end(), [](const Post& a, const Post& b) {
+                return a.timestamp < b.timestamp;
+            });
+        } else if (sortBy == "likes") {
+            sort(postsToSort.begin(), postsToSort.end(), [](const Post& a, const Post& b) {
+                return a.likes > b.likes;
+            });
+        } else if (sortBy == "comments") {
+            sort(postsToSort.begin(), postsToSort.end(), [](const Post& a, const Post& b) {
+                return a.comments.size() > b.comments.size();
+            });
+        }
+    }
+};
+
+int main() {
+    SocialMediaSystem system;
+
+    // Add some posts
+    system.addPost(Post(1, "Hello, world!", 1, "2023-11-22 12:00:00"));
+    system.addPost(Post(2, "This is a longer post.", 2, "2023-11-23 10:30:00"));
+    system.addPost(Post(3, "A post with a hashtag #trending", 3, "2023-11-24 15:15:00"));
+
+    // Like a post
+    system.likePost(1);
+
+    // Comment on a post
+    system.commentPost(2, "This is a comment.");
+
+    // Get posts by a user
+    vector<Post> userPosts = system.getPostsByUser(1);
+    for (const Post& post : userPosts) {
+        cout << "Post ID: " << post.postId << endl;
+        cout << "Content: " << post.content << endl;
+        cout << "Likes: " << post.likes << endl;
+        cout << "Comments: " << endl;
+        for (const string& comment : post.comments) {
+            cout << "- " << comment << endl;
+        }
+        cout << endl;
+    }
+
+    // Get trending hashtags
+    vector<pair<string, int>> trendingHashtags = system.getTrendingHashtags();
+    cout << "Trending Hashtags:" << endl;
+    for (const pair<string, int>& hashtag : trendingHashtags) {
+        cout << hashtag.first << " (" << hashtag.second << ")" << endl;
+    }
+
+    return 0;
+}
+
+
+Question 4
+A.	Why did you choose the specific STL container(e.g, std::vector,std::map, std::set) to manage posts, comments, and hashtags? Discuss the advantages and potential drawbacks of your choice for operations like adding posts, retrieving posts by user, and tracking trends hashtags.
+B.	B.How does your choice of containers impact the efficiency of searching for posts by user ID or retrieving trending hashtags? Would you consider an alternative? Why or why not?
+C.	If multiple users can simultaneously add, like, or comment on posts, how would you ensure data consistency and integrity? Discuss specific techniques like locking mechanisms or thread_safe containers.
+D.	What challenges might arise from concurrent modifications to the system, and how would you address them to maintain a seamless user experience?
+E.	How would you handle errors such as attempting to retrieve posts for user ID that does not exist or liking a post that has already been deleted? What approach would you use to provide meaningful feedback to users?
+
+
+A. Choosing specific STL container Container:
+ 1. I have choos std::vector for Posts.
+	Advantages:
+	 a. Efficient for adding posts (constant time at the end).
+	 b. Random access allows fast retrieval of posts by index (if needed).
+	Drawbacks:
+	 a. Re-allocation might be needed when the vector grows, potentially impacting performance for large datasets.
+	 b. Not ideal for sorting posts frequently, as it requires re-arranging elements.
+	 
+ 2. I have choose std::vector for each post object, Comments.
+	Advantages:
+	 a. Efficient for adding comments (constant time at the end).
+	 b. Allows maintaining order of comments within a post.
+	Drawbacks:
+	 a. Similar to posts, repeated insertions might cause re-allocations.
+	 b. Random access to specific comments isn't crucial, so a different container could be considered.
+
+ 3. I have choose std::set for global trending hashtags, std::vector for hashtags within each post.
+ i. Global Hashtags (std::set)
+	Advantages:
+	 a. Guarantees unique hashtags.
+	 b. Efficient for checking if a hashtag already exists.
+    Drawbacks:
+	 a. Retrieving all hashtags in order requires iterating through the set, which might not be the most efficient for displaying trending topics.
+ 
+ ii. Post Hashtags (std::vector)
+	Advantages:
+	 a. Simple way to store multiple hashtags for a post.
+	 b. Order of hashtags within a post is preserved.
+	Drawbacks:
+	 a. Duplicates are possible within a post (if not handled explicitly).
+	 
+B. Search Efficiency and Alternatives:
+Searching by User ID: Using a std::vector for posts allows fast lookups by index, only if user IDs are assigned sequentially. Otherwise, iterating through the vector becomes necessary (linear time).
+Trending Hashtags: With a std::set, checking for the existence of a hashtag is efficient (O(log n)). However, retrieving all trending hashtags in sorted order requires iterating through the set (potentially O(n)).
+
+Alternatives:
+User Posts:
+A std::unordered_map with user ID as the key and a std::vector of posts as the value could offer faster retrieval by user ID (average O(1)).
+Trending Hashtags:
+A std::map with hashtags as keys and their frequencies as values could allow iterating through hashtags in order of frequency (efficient retrieval of trending topics).
+
+C. Data Consistency with Concurrent Access:
+Locking Mechanisms:
+ a. Implement mutexes or critical sections to restrict access to shared data structures when multiple threads are modifying them. This ensures that only one thread modifies the data at a time, preventing inconsistencies.
+Thread-Safe Containers:
+ a. Consider using thread-safe alternatives like std::atomic for counters (likes) or std::atomic<bool> for flags (post deleted).
+ b. C++ provides libraries like concurrent_queue for thread-safe queues, which could be useful for managing incoming requests.
+
+D. Challenges and Solutions for Concurrent Modifications:
+Race Conditions: Multiple threads trying to access the same data simultaneously could lead to unexpected results.
+Stale Data: A thread might read outdated data due to concurrent modifications by another thread.
+
+Solutions:
+ 1. Locking Mechanisms: As mentioned above, using mutexes or critical sections to ensure data consistency during concurrent modifications.
+ 2. Atomic Operations: Using atomic operations for thread-safe updates of counters or flags.
+ 3. Optimistic Locking: Implementing optimistic locking techniques where threads first read the data, perform modifications, and then attempt to write back the updated data. If another thread modified the data in the meantime, the write operation fails, and the thread needs to retry.
+
+E. Error Handling and User Feedback:
+ i. Non-Existent User ID:
+	1. Check for the user ID existence before attempting to retrieve posts.
+	2. Provide informative error messages to the user, such as "User ID not found."
+ ii. Liking a Deleted Post:
+	1. Use flags or timestamps to indicate if a post is deleted.
+	2. If a user tries to like a deleted post, clearly state that the action cannot be performed (e.g., "This post has been deleted").
+ iii. General Error Handling:
+	1. Implement robust error handling to catch unexpected situations and provide informative feedback to users.
+	2. Consider using a logging mechanism to record errors for debugging purposes.
+By carefully choosing containers, implementing locking mechanisms, and handling errors gracefully, we can build a scalable and user-friendly social media system that can handle concurrent access from multiple users.
